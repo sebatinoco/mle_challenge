@@ -1,4 +1,11 @@
 import fastapi
+from fastapi.responses import JSONResponse
+import pandas as pd
+
+from .model import DelayModel
+from .utils import FlightsRequest
+
+model = DelayModel()
 
 app = fastapi.FastAPI()
 
@@ -9,5 +16,18 @@ async def get_health() -> dict:
     }
 
 @app.post("/predict", status_code=200)
-async def post_predict() -> dict:
-    return
+async def post_predict(request: FlightsRequest) -> dict:
+
+    # gather flight data from the request
+    flights = request.flights
+    flights_data = pd.DataFrame([flight.dict() for flight in flights])
+
+    # preprocess the flight data
+    features = model.preprocess(flights_data)
+
+    # make predictions using the preprocessed features
+    content = {
+        "predict": model.predict(features),
+    }
+
+    return JSONResponse(content=content, status_code=200)
