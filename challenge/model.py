@@ -18,7 +18,7 @@ class DelayModel:
         self._feature_names = ["OPERA", "TIPOVUELO", "MES"]
 
         # Columns to be used as features
-        self.top_10_features = [
+        self._top_10_features = [
             "OPERA_Latin American Wings", 
             "MES_7",
             "MES_10",
@@ -81,7 +81,7 @@ class DelayModel:
         features = pd.DataFrame(bow, columns=self._encoder.get_feature_names_out())
 
         # Filter to top 10 features
-        features = features[self.top_10_features] 
+        features = features[self._top_10_features] 
 
         return (features, target) if target_column else features
 
