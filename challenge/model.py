@@ -3,6 +3,7 @@ import numpy as np
 from typing import Tuple, Union, List
 import xgboost as xgb
 import pickle
+from sklearn.preprocessing import OneHotEncoder
 
 from .utils import get_min_diff
 
@@ -11,7 +12,10 @@ class DelayModel:
     def __init__(
         self
     ):
-        self._model = None # Model should be saved in this attribute.
+        self._model: xgb.XGBClassifier = None # Model should be saved in this attribute.
+        self._encoder: OneHotEncoder = None # Categorical encoder
+
+        self._feature_names = ["OPERA", "TIPOVUELO", "MES"]
 
         # Columns to be used as features
         self.top_10_features = [
@@ -30,8 +34,9 @@ class DelayModel:
         # Target column name
         self._target_name = "delay"
 
-        # Model file path
-        self._model_path = 'challenge/models/xgb_model.pkl'
+        # Models file path
+        self._model_path = 'challenge/models/xgb_model.pkl' # XGBoost
+        self._encoder_path = 'challenge/models/onehot_encoder.pkl' # Encoder
 
     def preprocess(
         self,
@@ -61,13 +66,19 @@ class DelayModel:
             # Get target column
             target = data[[self._target_name]]
 
-        # One-hot encoding for categorical features
-        features = pd.concat([
-            pd.get_dummies(data['OPERA'], prefix = 'OPERA'),
-            pd.get_dummies(data['TIPOVUELO'], prefix = 'TIPOVUELO'), 
-            pd.get_dummies(data['MES'], prefix = 'MES')], 
-            axis = 1
-        )
+        # Load the encoder if it is not already loaded
+        if self._encoder is None:
+            try:
+                self._encoder = self.load_model(self._encoder_path)
+            except FileNotFoundError:
+                print("Encoder not found. Fitting a new OneHotEncoder.")
+                self._encoder = OneHotEncoder(handle_unknown='ignore', sparse_output=False)
+                self._encoder.fit(data[self._feature_names])
+                self.export_model(self._encoder, self._encoder_path) # Save encoder
+
+        # Transform the data using one-hot encoding
+        bow = self._encoder.transform(data[self._feature_names])
+        features = pd.DataFrame(bow, columns=self._encoder.get_feature_names_out())
 
         # Filter to top 10 features
         features = features[self.top_10_features] 
@@ -117,20 +128,20 @@ class DelayModel:
         """
 
         if self._model is None:
-            self.load_model(self._model_path)
+            self._model = self.load_model(self._model_path)
 
         return self._model.predict(features).tolist()
 
     def export_model(
         self,
-        model: xgb.XGBClassifier,
+        model: Union[xgb.XGBClassifier, OneHotEncoder],
         model_path: str
     ) -> None:
         """
         Export the trained model to a file.
 
         Args:
-            model (xgb.XGBClassifier): trained XGBoost model.
+            model (xgb.XGBClassifier | OneHotEncoder): trained XGBoost model or OneHotEncoder.
             model_path (str): path to save the model file.
         
         Returns:
@@ -140,22 +151,25 @@ class DelayModel:
         with open(model_path, 'wb') as f:
             pickle.dump(model, f)
 
-    def load_model(
-        self,
-        model_path: str
-    ) -> None:
-        """
-        Load a pre-trained model from a file.
+    def load_model(self, model_path: str) -> Union[xgb.XGBClassifier, OneHotEncoder]:
+            """
+            Load model from disk.
 
-        Args:
-            model_path (str): path to the model file.
-        
-        Returns:
-            None
-        """
+            Args:
+                model_path: filepath
 
-        try:
+            Returns:
+                Loaded model instance
+            """
             with open(model_path, 'rb') as f:
-                self._model = pickle.load(f)
-        except FileNotFoundError:
-            raise FileNotFoundError(f"Model file not found at {model_path}. Please ensure the model has been trained and exported correctly.")
+                model = pickle.load(f)
+
+            # Assign to attributes if recognized
+            if model_path == self._model_path:
+                self._model = model
+            elif model_path == self._encoder_path:
+                self._encoder = model
+            else:
+                raise ValueError(f"Unsupported model path: {model_path}")
+
+            return model
