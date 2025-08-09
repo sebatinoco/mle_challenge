@@ -25,6 +25,8 @@ class DelayModel:
             "OPERA_Copa Air"
         ]
 
+        self._target_name = "delay"
+
     def preprocess(
         self,
         data: pd.DataFrame,
@@ -46,7 +48,7 @@ class DelayModel:
         data['min_diff'] = data.apply(get_min_diff, axis = 1)
 
         threshold_in_minutes = 15
-        data['delay'] = np.where(data['min_diff'] > threshold_in_minutes, 1, 0)
+        data[self._target_name] = np.where(data['min_diff'] > threshold_in_minutes, 1, 0)
 
         # One-hot encoding for categorical features
         features = pd.concat([
@@ -58,7 +60,7 @@ class DelayModel:
 
         features = features[self.top_10_features] # filter to top 10 features
 
-        target = data[['delay']]
+        target = data[[self._target_name]]
 
         return (features, target) if target_column else features
 
@@ -75,8 +77,8 @@ class DelayModel:
             target (pd.DataFrame): target.
         """
 
-        n_y0 = len(features[features == 0])
-        n_y1 = len(features[features == 1])
+        n_y0 = len(target[target[self._target_name] == 0])
+        n_y1 = len(target[target[self._target_name] == 1])
         scale = n_y0/n_y1
 
         xgb_model = xgb.XGBClassifier(random_state=1, learning_rate=0.01, scale_pos_weight = scale)
