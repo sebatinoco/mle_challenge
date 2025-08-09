@@ -72,7 +72,7 @@ class DelayModel:
                 self._encoder = self.load_model(self._encoder_path)
             except FileNotFoundError:
                 print("Encoder not found. Fitting a new OneHotEncoder.")
-                self._encoder = OneHotEncoder(handle_unknown='ignore', sparse_output=False)
+                self._encoder = OneHotEncoder(sparse_output=False)
                 self._encoder.fit(data[self._feature_names])
                 self.export_model(self._encoder, self._encoder_path) # Save encoder
 
