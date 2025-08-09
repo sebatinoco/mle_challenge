@@ -12,6 +12,7 @@ class DelayModel:
     ):
         self._model = None # Model should be saved in this attribute.
 
+        # Columns to be used as features
         self.top_10_features = [
             "OPERA_Latin American Wings", 
             "MES_7",
@@ -25,6 +26,7 @@ class DelayModel:
             "OPERA_Copa Air"
         ]
 
+        # Target column name
         self._target_name = "delay"
 
     def preprocess(
@@ -45,8 +47,8 @@ class DelayModel:
             pd.DataFrame: features.
         """
 
+        # Generate the target column based on the time difference between flights
         data['min_diff'] = data.apply(get_min_diff, axis = 1)
-
         threshold_in_minutes = 15
         data[self._target_name] = np.where(data['min_diff'] > threshold_in_minutes, 1, 0)
 
@@ -58,8 +60,10 @@ class DelayModel:
             axis = 1
         )
 
-        features = features[self.top_10_features] # filter to top 10 features
+        # Filter to top 10 features
+        features = features[self.top_10_features] 
 
+        # Get target column
         target = data[[self._target_name]]
 
         return (features, target) if target_column else features
@@ -77,13 +81,16 @@ class DelayModel:
             target (pd.DataFrame): target.
         """
 
+        # Get scale for imbalanced classes
         n_y0 = len(target[target[self._target_name] == 0])
         n_y1 = len(target[target[self._target_name] == 1])
         scale = n_y0/n_y1
 
+        # Fit XGBoost model
         xgb_model = xgb.XGBClassifier(random_state=1, learning_rate=0.01, scale_pos_weight = scale)
         xgb_model.fit(features, target)
 
+        # Save model in the class attribute
         self._model = xgb_model 
 
     def predict(
