@@ -5,3 +5,4 @@ numpy~=1.25
 pandas~=1.3.5
 scikit-learn~=1.3.0
 xgboost==3.0.3
+anyio==3.4.0
