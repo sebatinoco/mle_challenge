@@ -1,6 +1,9 @@
 import pandas as pd
-
+import numpy as np
 from typing import Tuple, Union, List
+import xgboost as xgb
+
+from .utils import get_min_diff
 
 class DelayModel:
 
@@ -13,7 +16,7 @@ class DelayModel:
         self,
         data: pd.DataFrame,
         target_column: str = None
-    ) -> Union(Tuple[pd.DataFrame, pd.DataFrame], pd.DataFrame):
+    ) -> Union[Tuple[pd.DataFrame, pd.DataFrame], pd.DataFrame]:
         """
         Prepare raw data for training or predict.
 
@@ -26,7 +29,21 @@ class DelayModel:
             or
             pd.DataFrame: features.
         """
-        return
+
+        data['min_diff'] = data.apply(get_min_diff, axis = 1)
+
+        threshold_in_minutes = 15
+        data['delay'] = np.where(data['min_diff'] > threshold_in_minutes, 1, 0)
+
+        features = pd.concat([
+            pd.get_dummies(data['OPERA'], prefix = 'OPERA'),
+            pd.get_dummies(data['TIPOVUELO'], prefix = 'TIPOVUELO'), 
+            pd.get_dummies(data['MES'], prefix = 'MES')], 
+            axis = 1
+        )
+        target = data['delay']
+
+        return (features, target) if target_column else features
 
     def fit(
         self,
@@ -40,7 +57,11 @@ class DelayModel:
             features (pd.DataFrame): preprocessed data.
             target (pd.DataFrame): target.
         """
-        return
+        
+        xgb_model = xgb.XGBClassifier(random_state=1, learning_rate=0.01)
+        xgb_model.fit(features, target)
+
+        self._model = xgb_model  # Implement model fitting logic here.
 
     def predict(
         self,
@@ -55,4 +76,5 @@ class DelayModel:
         Returns:
             (List[int]): predicted targets.
         """
-        return
+
+        return self._model.predict(features).tolist() if self._model else []
