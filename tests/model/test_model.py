@@ -68,11 +68,15 @@ class TestModel(unittest.TestCase):
             target_column="delay"
         )
 
-        _, features_validation, _, target_validation = train_test_split(features, target, test_size = 0.33, random_state = 42)
+        features_train, features_validation, target_train, target_validation = train_test_split(features, 
+                                                                                                target, 
+                                                                                                test_size = 0.33, 
+                                                                                                random_state = 42,
+                                                                                                )
 
         self.model.fit(
-            features=features,
-            target=target
+            features=features_train,
+            target=target_train
         )
 
         predicted_target = self.model._model.predict(
