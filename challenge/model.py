@@ -95,7 +95,7 @@ class DelayModel:
         xgb_model.fit(features, target)
 
         # Export model to pickle file
-        self.export_model(self._model_path)
+        self.export_model(xgb_model, self._model_path)
 
         # Save model in the class attribute
         self._model = xgb_model 
@@ -121,12 +121,14 @@ class DelayModel:
 
     def export_model(
         self,
+        model: xgb.XGBClassifier,
         model_path: str
     ) -> None:
         """
         Export the trained model to a file.
 
         Args:
+            model (xgb.XGBClassifier): trained XGBoost model.
             model_path (str): path to save the model file.
         
         Returns:
@@ -134,7 +136,7 @@ class DelayModel:
         """
 
         with open(model_path, 'wb') as f:
-            pickle.dump(self._model, f)
+            pickle.dump(model, f)
 
     def load_model(
         self,
@@ -154,4 +156,4 @@ class DelayModel:
             with open(model_path, 'rb') as f:
                 self._model = pickle.load(f)
         except FileNotFoundError:
-            print(f"Model file not found at {model_path}.")
+            raise FileNotFoundError(f"Model file not found at {model_path}. Please ensure the model has been trained and exported correctly.")
