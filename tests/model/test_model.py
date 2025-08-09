@@ -145,14 +145,8 @@ class TestModel(unittest.TestCase):
         -------
         None
         """
-        features, target = self.model.preprocess(
+        features = self.model.preprocess(
             data=self.data,
-            target_column="delay"
-        )
-
-        self.model.fit(
-            features=features,
-            target=target,
         )
 
         predicted_targets = self.model.predict(features=features)
