@@ -51,10 +51,15 @@ class DelayModel:
             pd.DataFrame: features.
         """
 
-        # Generate the target column based on the time difference between flights
-        data['min_diff'] = data.apply(get_min_diff, axis = 1)
-        threshold_in_minutes = 15
-        data[self._target_name] = np.where(data['min_diff'] > threshold_in_minutes, 1, 0)
+        # If target_column is provided, generate the target vector
+        if target_column:
+            # Generate the target column based on the time difference between flights
+            data['min_diff'] = data.apply(get_min_diff, axis = 1)
+            threshold_in_minutes = 15
+            data[self._target_name] = np.where(data['min_diff'] > threshold_in_minutes, 1, 0)
+
+            # Get target column
+            target = data[[self._target_name]]
 
         # One-hot encoding for categorical features
         features = pd.concat([
@@ -66,9 +71,6 @@ class DelayModel:
 
         # Filter to top 10 features
         features = features[self.top_10_features] 
-
-        # Get target column
-        target = data[[self._target_name]]
 
         return (features, target) if target_column else features
 
