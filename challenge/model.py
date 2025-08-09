@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from typing import Tuple, Union, List
 import xgboost as xgb
+import pickle
 
 from .utils import get_min_diff
 
@@ -28,6 +29,9 @@ class DelayModel:
 
         # Target column name
         self._target_name = "delay"
+
+        # Model file path
+        self._model_path = 'challenge/models/xgb_model.pkl'
 
     def preprocess(
         self,
@@ -90,6 +94,9 @@ class DelayModel:
         xgb_model = xgb.XGBClassifier(random_state=1, learning_rate=0.01, scale_pos_weight = scale)
         xgb_model.fit(features, target)
 
+        # Export model to pickle file
+        self.export_model(self._model_path)
+
         # Save model in the class attribute
         self._model = xgb_model 
 
@@ -107,4 +114,44 @@ class DelayModel:
             (List[int]): predicted targets.
         """
 
-        return self._model.predict(features).tolist() if self._model else []
+        if self._model is None:
+            self.load_model(self._model_path)
+
+        return self._model.predict(features).tolist()
+
+    def export_model(
+        self,
+        model_path: str
+    ) -> None:
+        """
+        Export the trained model to a file.
+
+        Args:
+            model_path (str): path to save the model file.
+        
+        Returns:
+            None
+        """
+
+        with open(model_path, 'wb') as f:
+            pickle.dump(self._model, f)
+
+    def load_model(
+        self,
+        model_path: str
+    ) -> None:
+        """
+        Load a pre-trained model from a file.
+
+        Args:
+            model_path (str): path to the model file.
+        
+        Returns:
+            None
+        """
+
+        try:
+            with open(model_path, 'rb') as f:
+                self._model = pickle.load(f)
+        except FileNotFoundError:
+            print(f"Model file not found at {model_path}.")
