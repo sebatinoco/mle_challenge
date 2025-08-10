@@ -193,5 +193,33 @@ To deploy the model in an `API` using `FastAPI` and pass all the unit tests, it 
 
 ## Part III
 
+[Back to the start](#mle-challenge)
+
+With the previous scripts fully functional, we are now ready to deploy our API to the cloud. For this, we use **Cloud Run**, a Google Cloud Platform (GCP) service that simplifies the deployment of containerized applications.
+
+You can access the deployed application here:  
+[Deployed Application](https://mle-challenge-756665630445.southamerica-west1.run.app)
+
+To enable deployment, we applied the following key changes to the repository:
+
+- **Dockerfile:**  
+  - Updated the Python base image to `python:3.10-slim` to reduce the image size.  
+  - Configured the Dockerfile to copy application scripts, install dependencies, and launch the API on port 8000.
+
+- **requirements.txt:**  
+  - Upgraded `scikit-learn` from version `1.3.0` to `~1.5.0` to prevent deployment errors.
+
+- **requirements-test.txt:**  
+  - Added libraries to support the stress testing phase and avoid related errors:  
+    - `Jinja2==3.0.3`  
+    - `itsdangerous==2.0.1`  
+    - `Werkzeug==2.0.3`
+
+- **Makefile:**  
+  - Updated the `STRESS_URL` variable to point to the URL of the deployed API.
+
+- **.dockerignore:**  
+  - Added a `.dockerignore` file to exclude unnecessary files from the Docker build context, helping to reduce the image size.
+
 ## Part IV
 
