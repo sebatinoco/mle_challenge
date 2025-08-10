@@ -11,7 +11,7 @@ COPY requirements.txt .
 RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code
-COPY . .
+COPY challenge /app/challenge
 
 # Expose the port the app runs on
 EXPOSE 8000
