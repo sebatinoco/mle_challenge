@@ -40,4 +40,4 @@ jobs:
 
             - name: Lint (checks for bad code style)
               run: |
-                pylint --disable=R,C  main.py
+                pylint --disable=R,C  challenge/api.py
