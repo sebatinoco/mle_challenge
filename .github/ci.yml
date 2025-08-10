@@ -3,10 +3,10 @@ name: 'Continuous Integration'
 on:
     pull_request:
         branches:
-            [main, develop]
+            [main, develop, feature/ci_cd]
     push:
         branches:
-            [main, develop]
+            [main, develop, feature/ci_cd]
 
     # Allow manual triggering of the workflow
     workflow_dispatch:
