@@ -94,7 +94,102 @@ With these fixes applied, the main remaining task is to complete the implementat
    - Applies Python type hints consistently across all method signatures.
 
 
+### Hotfixes
+
+Through the development of the project, some hotfixes were needed to keep the progress of the challenge. Here's a list of the implemented hotfixes related to the scripts of Part I.
+
+#### Hotfix: Adding condition to generate a target vector
+
+As stated in the title, this hotfix aimed to add a condition to generate the vector column. This way, we avoid unnecesary processing (and potential errors) on production.
+
+```python
+### PREVIOUS CODE
+# Generate the target column based on the time difference between flights
+data['min_diff'] = data.apply(get_min_diff, axis = 1)
+threshold_in_minutes = 15
+data[self._target_name] = np.where(data['min_diff'] > threshold_in_minutes, 1, 0)
+
+### NEW CODE
+# If target_column is provided, generate the target vector
+if target_column:
+    # Generate the target column based on the time difference between flights
+    data['min_diff'] = data.apply(get_min_diff, axis = 1)
+    threshold_in_minutes = 15
+    data[self._target_name] = np.where(data['min_diff'] > threshold_in_minutes, 1, 0)
+
+    # Get target column
+    target = data[[self._target_name]]
+```
+
+#### Hotfix: Adding OneHotEncoder from scikit-learn
+
+Although this was originally intented to prevent further errors from unknown categories, later this was not necessary as the unit tests required to return an error when this happens (LOL).
+
+Either way, this is the change on the code:
+
+```python
+### PREVIOUS CODE
+# One-hot encoding for categorical features
+features = pd.concat([
+    pd.get_dummies(data['OPERA'], prefix = 'OPERA'),
+    pd.get_dummies(data['TIPOVUELO'], prefix = 'TIPOVUELO'), 
+    pd.get_dummies(data['MES'], prefix = 'MES')], 
+    axis = 1
+)
+
+### NEW CODE
+# Load the encoder if it is not already loaded
+if self._encoder is None:
+    try:
+        self._encoder = self.load_model(self._encoder_path)
+    except FileNotFoundError:
+        print("Encoder not found. Fitting a new OneHotEncoder.")
+        self._encoder = OneHotEncoder(handle_unknown='ignore', sparse_output=False)
+        self._encoder.fit(data[self._feature_names])
+        self.export_model(self._encoder, self._encoder_path) # Save encoder
+
+# Transform the data using one-hot encoding
+bow = self._encoder.transform(data[self._feature_names])
+features = pd.DataFrame(bow, columns=self._encoder.get_feature_names_out())
+```
+
+#### Hotfix: Disabling handle_unknown
+
+As mentioned, I had to disable the `handle_unknown='ignore'` parameter to return an error where a unknown category shows up.
+
+This is the change on code:
+
+```python
+### PREVIOUS CODE
+self._encoder = OneHotEncoder(handle_unknown='ignore', sparse_output=False)
+
+### NEW CODE
+self._encoder = OneHotEncoder(sparse_output=False)
+```
+
 ## Part II
+
+[Back to the start](#mle-challenge)
+
+To deploy the model in an `API` using `FastAPI` and pass all the unit tests, it required to generate code for a correct deployment. Here's a list of the key changes made across the provided files:
+
+- **model.py:**
+    - [Hotfix 1](#hotfix-adding-condition-to-generate-a-target-vector), [Hotfix 2](#hotfix-adding-onehotencoder-from-scikit-learn) and [Hotfix 3](#hotfix-disabling-handle_unknown) described on the previous section.
+
+- **requirements.txt**
+    - Added `anyio==3.4.0` to requirements.txt to avoid deployment errors.
+
+- **utils.py**:
+    - Added `Flight` and `FlightsRequest` pydantic model to structure requests received FastAPI endpoint.
+
+- **api.py:**
+    - Initiation of `DelayModel` for prediction.
+    - Completed `/predict` endpoint considering:
+        - Receive a `FlightRequest` request.
+        - Transformation to pandas DataFrame of the input.
+        - Preprocess the input using `preprocess` method of `DelayModel`.
+        - Generate predictions using `predict` method of `DelayModel`.
+        - Have a try-except logic to return a 200 response when there are no errors parsing generating the prediction, and return a 400 response when an error occurs (mainly targeting the unknown categories shown on columns).
 
 ## Part III
 
