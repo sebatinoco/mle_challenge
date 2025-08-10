@@ -33,7 +33,7 @@ async def post_predict(request: FlightsRequest) -> dict:
 
         return JSONResponse(content=content, status_code=200)
     
-    except Exception as e:
+    except ValueError as e:
         # handle any exceptions that occur during prediction
         return JSONResponse(
             status_code=400,
