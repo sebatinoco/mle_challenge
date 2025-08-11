@@ -42,3 +42,15 @@ jobs:
         run: |
           docker build --tag "$DOCKER_TAG" .
           docker push "$DOCKER_TAG"
+
+      - name: Deploy to Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ secrets.SERVICE }}
+          region: ${{ secrets.REGION }}
+          image: ${{ env.DOCKER_TAG }}
+
+      - name: Show output
+        run: |
+          echo "Cloud Run URL: ${{ steps.deploy.outputs.url }}"
