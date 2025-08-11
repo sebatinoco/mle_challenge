@@ -12,7 +12,7 @@ env:
   PROJECT_ID: 'earthquakevm-280321' 
   REGION: 'southamerica-west1'
   SERVICE: 'mle-challenge'
-  WORKLOAD_IDENTITY_PROVIDER: 'projects/756665630445/locations/global/workloadIdentityPools/github/providers/my-repo'
+  WORKLOAD_IDENTITY_PROVIDER: 'projects/756665630445/locations/global/workloadIdentityPools/github/attribute.repository/repo:sebatinoco/mle-challenge'
   SERVICE_ACCOUNT_EMAIL: '756665630445-compute@developer.gserviceaccount.com' 
 
 jobs:
