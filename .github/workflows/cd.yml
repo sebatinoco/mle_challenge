@@ -16,13 +16,18 @@ jobs:
       - name: Checkout
         uses: 'actions/checkout@v4'
 
-      - name: Configure Docker for GCP
-        run: gcloud auth configure-docker
+      - name: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
 
       - name: Install Gcloud CLI
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ secrets.PROJECT_ID }}
+
+      - name: Configure Docker for GCP
+        run: gcloud auth configure-docker
 
       - name: build and push the docker image
         env:
