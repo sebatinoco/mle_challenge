@@ -33,9 +33,13 @@ jobs:
         uses: 'google-github-actions/auth@v2'
         with:
           workload_identity_provider: '${{ env.WORKLOAD_IDENTITY_PROVIDER }}'
-          service_account: '${{ env.SERVICE_ACCOUNT_EMAIL }}'    
+          service_account: '${{ env.SERVICE_ACCOUNT_EMAIL }}'
 
-      - name: 'Verify authenticated account'
+      - name: Configure gcloud CLI
+        run: |
+          echo "${{ steps.auth.outputs.access_token }}" | gcloud auth activate-access-token --brief
+
+      - name: Verify authenticated account
         run: |
           gcloud auth list
           gcloud config get-value account
