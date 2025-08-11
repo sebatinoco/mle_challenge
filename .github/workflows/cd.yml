@@ -14,11 +14,14 @@ permissions:
 
 jobs:
   deploy:
-    runs-on: 'ubuntu-latest'
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_TAG: ${{ secrets.REGION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/${{ secrets.SERVICE }}/${{ secrets.IMAGE_NAME }}:${{ github.sha }}
+      GOOGLE_PROJECT: ${{ secrets.PROJECT_ID }}
 
     steps:
       - name: Checkout
-        uses: 'actions/checkout@v4'
+        uses: actions/checkout@v4
 
       - name: Authenticate to Google Cloud
         id: auth
@@ -35,10 +38,7 @@ jobs:
       - name: Configure Docker for GCP
         run: gcloud auth configure-docker ${{ secrets.REGION }}-docker.pkg.dev
 
-      - name: build and push the docker image
-        env:
-          GOOGLE_PROJECT: ${{ secrets.PROJECT_ID }}
+      - name: Build and push Docker image
         run: |
-          DOCKER_TAG="${{ secrets.REGION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/${{ secrets.SERVICE }}:${{ github.sha }}"
-          docker build --tag "${DOCKER_TAG}" .
-          docker push "${DOCKER_TAG}"
+          docker build --tag "$DOCKER_TAG" .
+          docker push "$DOCKER_TAG"
