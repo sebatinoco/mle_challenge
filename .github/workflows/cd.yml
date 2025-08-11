@@ -33,7 +33,7 @@ jobs:
           project_id: ${{ secrets.PROJECT_ID }}
 
       - name: Configure Docker for GCP
-        run: gcloud auth configure-docker
+        run: gcloud auth configure-docker ${{ secrets.REGION }}-docker.pkg.dev
 
       - name: build and push the docker image
         env:
