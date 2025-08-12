@@ -50,3 +50,4 @@ jobs:
             --platform managed \
             --region ${{ secrets.REGION }} \
             --service-account ${{ secrets.SERVICE_ACCOUNT }}
+            --port 8000
