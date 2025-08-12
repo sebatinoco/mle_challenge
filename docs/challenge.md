@@ -1,5 +1,14 @@
 # MLE Challenge
 
+## Useful links
+
+Here's a list of the key components of this project:
+
+- [Deployed API](https://mle-challenge-756665630445.southamerica-west1.run.app)
+- [Github repository](https://github.com/sebatinoco/mle_challenge)
+
+## Introduction
+
 Welcome! This document provides comprehensive documentation to understand the solution developed for the Machine Learning Engineer challenge.
 
 It is organized into four sections, corresponding to each part of the challenge:
@@ -223,3 +232,153 @@ To enable deployment, we applied the following key changes to the repository:
 
 ## Part IV
 
+Well, this part was really hard to get done.
+
+I will begin by describing all the things that gone wrong and could have gone so much better:
+
+- First, I spent 2-3 hours trying to properly set the CI-CD github actions. I developed a well wrriten CI-CD workflow, but when I tried to visualize the workflows on Github Actions, they were not recognized by the platform. I tried a lot of changes (like really a lot) to later realizar the reason they were not recognized was the files were not inside `.github/workflows` folder (they were inside `.github`). 
+
+- The previous reason really messed my gitflow practices: on a desperate intent to solve this issue, I thought the reason the workflows were not recognized was the workflows were not on the main branch yet (I was working on a separate branch). So I pushed these changes to develop, and from develop to main. All of this to later realize that was not the solution (like I previously said, the solution was to move the workflows inside the `workflows` folder). 
+
+- Once the workflows were recognized, I tested them to make sure they worked correctly: they did not. So I started working on them. I don't know why, but at that time my mind was still thinking that the workflows only worked on the main branch. So I started developing a hotfix, commit and pushed these changes to develop, and from develop to main. This repeated many times, hotfix after hotfix. All to later realize I could fix and test the workflows on a separate branch, get the workflows working and then merge with develop and main. So yeah, I pushed a lot to those branches (sorry, my bad).
+
+- To make the things worse, getting to make the workflows was SUCH A HUSSLE MAN. As stated before, I deployed my API to GCP, a cloud I do not know much about. The proposed flow was simple:
+  - CI:
+    - Apply Formater
+    - Apply Linter
+    - Test code
+  - CD:
+    - Build image
+    - Push image to a container registry (at first, I wanted to use DockerHub)
+    - Use the image to deploy a Cloud Run instance
+
+  The CI part was not so difficult: I just required to reapply the same lines of code I was executing locally on the workflow. But man, the CD. The CD was just OTHER THING.
+
+  First, I learned settting a connection from DockerHub to GCP was not straightforward, so I replaced DockerHub to GCP Artifact Registry. That shouldn't be so hard, right? Wrong.
+
+  Permissions and roles. I quickly learned I needed to set up some authentication to my workflow in order to push the built image to the repository. So I started reading, watching videos, etc in order to learn all the configurations needed to set this workflow correctly. Man, I learned A LOT. IAM, service account, gcp CLI, etc. I really hope my project passes the evaluation, because I really wouldn't wish this for someone else to have the same experience.
+
+  Another thing that went wrong really bad was the way I was trying to set the steps of both workflows. As I was taught, a good practice is to use Github Actions workflows built by other people (specially the ones built by big companies like Google). So I searched for workflows to deploy Images to GCP and tried to use them. Of course, this went really really wrong. None of the workflows worked. I tried many times to fix the workflows, reading on the web, watching a lot of videos. All to later give up on these workflows and switch to `gcloud CLI`, and then, it all started working like a charm. Just magic. But man, I do not joke saying I spent a full day fixing this particular issue.
+
+Anyways, this is the solution I came up:
+
+- **CI:**
+  - Apply Formater (Black)
+  - Apply Linter (pylint)
+  - Test code (using provided tests)
+- **CD:**
+  - Build image (Docker)
+  - Push image (GCP Artifact Registrry)
+  - Deploy image (Cloud Run)
+
+And here's the respective code:
+
+- **Continuous Integration (CI):**
+
+```yaml
+name: 'Continuous Integration'
+
+on:
+    workflow_call:
+    pull_request:
+        branches:
+            [main, develop]
+    push:
+        branches:
+            [main, develop]
+
+    # Allow manual triggering of the workflow
+    workflow_dispatch:
+
+jobs:
+    ci:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v3
+
+            - name: Set up Python
+              uses: actions/setup-python@v4
+              with: 
+                python-version: "3.10.18"
+
+            - name: Install dependencies
+              run: |
+                python -m pip install --upgrade pip
+                pip install -r requirements-test.txt
+
+            - name: Test App Code
+              run: |
+                make model-test
+                make api-test
+
+            - name: Format (formats code for readability)
+              run: |
+                black .
+
+            - name: Lint (checks for bad code style)
+              run: |
+                pylint --disable=R,C  challenge/api.py
+```
+
+- **Continuous Delivery (CD):**
+
+```yaml
+name: 'Continuous Delivery'
+on:
+  push:
+      branches:
+          [main]
+
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+  deploy:
+    needs: ci
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_TAG: ${{ secrets.REGION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/${{ secrets.SERVICE }}/${{ secrets.IMAGE_NAME }}:${{ github.sha }}
+      GOOGLE_PROJECT: ${{ secrets.PROJECT_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT }}
+
+      - name: Install Gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.PROJECT_ID }}
+
+      - name: Configure Docker for GCP
+        run: gcloud auth configure-docker ${{ secrets.REGION }}-docker.pkg.dev
+
+      - name: Build Docker image
+        run: docker build --tag "$DOCKER_TAG" .
+
+      - name: Push Docker image
+        run: docker push "$DOCKER_TAG"
+          
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy mle-challenge \
+            --image ${{ env.DOCKER_TAG }} \
+            --platform managed \
+            --region ${{ secrets.REGION }} \
+            --service-account ${{ secrets.SERVICE_ACCOUNT }} \
+            --port 8000 \
+            --allow-unauthenticated \
+            --min-instances 1
+```
