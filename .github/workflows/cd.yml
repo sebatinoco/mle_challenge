@@ -1,10 +1,8 @@
 name: 'Continuous Delivery'
-
 on:
-  workflow_run:
-    workflows: ["Continuous Integration"] 
-    types:
-      - completed
+  push:
+      branches:
+          [main]
 
   workflow_dispatch:
 
@@ -13,16 +11,18 @@ permissions:
   contents: read
 
 jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
   deploy:
+    needs: ci
     runs-on: ubuntu-latest
     env:
       DOCKER_TAG: ${{ secrets.REGION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/${{ secrets.SERVICE }}/${{ secrets.IMAGE_NAME }}:${{ github.sha }}
       GOOGLE_PROJECT: ${{ secrets.PROJECT_ID }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
+        
       - name: Authenticate to Google Cloud
         id: auth
         uses: google-github-actions/auth@v2
