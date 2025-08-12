@@ -45,7 +45,7 @@ jobs:
 
       - name: Deploy to Cloud Run
         run: |
-          gcloud run deploy mle_challenge \
+          gcloud run deploy mle-challenge \
             --image ${{ env.DOCKER_TAG }} \
             --platform managed \
             --region ${{ secrets.REGION }} \
