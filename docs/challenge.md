@@ -22,7 +22,7 @@ Let's dive in!
 
 
 <p align="center">
-<img src="https://media4.giphy.com/media/v1.Y2lkPTZjMDliOTUyMWc5YW94d2FlM3ZlMncwMTVueHdiNHIxOWdzM2FheGhrNmQ4cnhzZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3aGZA6WLI9Jde/source.gif" alt="Lets gooo" width="400" />
+<img src="https://media4.giphy.com/media/v1.Y2lkPTZjMDliOTUyMWc5YW94d2FlM3ZlMncwMTVueHdiNHIxOWdzM2FheGhrNmQ4cnhzZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3aGZA6WLI9Jde/source.gif" alt="Lets gooo" width="300" />
 </p>
 
 
@@ -246,6 +246,34 @@ To enable deployment, we applied the following key changes to the repository:
 - **.dockerignore:**  
   - Added a `.dockerignore` file to exclude unnecessary files from the Docker build context, helping to reduce the image size.
 
+Here are the results obtained after running `stress-test`:
+
+| Name        | # reqs | # fails | Avg | Min | Max | Median | req/s | failures/s |
+|-------------|--------|---------|-----|-----|-----|--------|-------|------------|
+| POST /predict | 3647  | 0 (0.00%) | 488 | 21  | 1018 | 490    | 61.04 | 0.00       |
+
+Aggregated:
+
+| Name       | # reqs | # fails | Avg | Min | Max | Median | req/s | failures/s |
+|------------|--------|---------|-----|-----|-----|--------|-------|------------|
+| Aggregated | 3647   | 0 (0.00%) | 488 | 21  | 1018 | 490    | 61.04 | 0.00       |
+
+---
+
+Response time percentiles (approximated):
+
+| Type | Name       | 50% | 66% | 75% | 80% | 90% | 95% | 98% | 99% | 99.9% | 99.99% | 100% | # reqs |
+|------|------------|-----|-----|-----|-----|-----|-----|-----|-----|-------|--------|------|--------|
+| POST | /predict   | 490 | 620 | 720 | 800 | 880 | 920 | 970 | 980 | 1000  | 1000   | 1000 | 3647   |
+| None | Aggregated | 490 | 620 | 720 | 800 | 880 | 920 | 970 | 980 | 1000  | 1000   | 1000 | 3647   |
+
+From the results, we conclude:
+
+- The deployed API handled 3,647 requests with zero failures, showing high reliability under load.
+- Sadly, the response times were raising :(. This is a sign of potential queuing, probably because of Pandas usage (or maybe lack of resources?).
+- Average response time was about 488 ms, with most requests completing under 1 second.
+- Throughput reached 61 requests per second, indicating good performance for moderate concurrency.
+
 ## Part IV
 
 [Back to the start](#mle-challenge)
@@ -416,4 +444,3 @@ See you next time!!
 <p align="center">
 <img src="https://media1.tenor.com/m/Syo75lZhQ4gAAAAC/rambo-thumbs-up-rambo.gif" alt="God why" width="300" />
 </p>
-
