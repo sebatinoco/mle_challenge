@@ -49,5 +49,5 @@ jobs:
             --image ${{ env.DOCKER_TAG }} \
             --platform managed \
             --region ${{ secrets.REGION }} \
-            --service-account ${{ secrets.SERVICE_ACCOUNT }}
+            --service-account ${{ secrets.SERVICE_ACCOUNT }} \
             --port 8000
