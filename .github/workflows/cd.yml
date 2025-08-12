@@ -44,13 +44,9 @@ jobs:
           docker push "$DOCKER_TAG"
 
       - name: Deploy to Cloud Run
-        id: deploy
-        uses: google-github-actions/deploy-cloudrun@v2
-        with:
-          service: ${{ secrets.SERVICE }}
-          region: ${{ secrets.REGION }}
-          image: ${{ env.DOCKER_TAG }}
-
-      - name: Show output
         run: |
-          echo "Cloud Run URL: ${{ steps.deploy.outputs.url }}"
+          gcloud run deploy mle_challenge \
+            --image ${{ env.DOCKER_TAG }} \
+            --platform managed \
+            --region ${{ secrets.REGION }} \
+            --service-account ${{ secrets.SERVICE_ACCOUNT }}
