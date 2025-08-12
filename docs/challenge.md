@@ -32,6 +32,10 @@ Let's dive in!
 
 To complete this section, several fixes were required to ensure smooth execution and correctness. Below is a summary of the key changes made across the provided files:
 
+<p align="center">
+<img src="https://i.pinimg.com/originals/6c/90/28/6c90288d7e10d46d18895f17f420a92c.gif" alt="Working" width="300" />
+</p>
+
 - **exploration.ipynb:**  
     - Fixed incorrect `sns.barplot` usage by specifying keyword arguments explicitly:  
     ```python
@@ -66,8 +70,6 @@ To complete this section, several fixes were required to ensure smooth execution
         target=target_train
     )
     ```
-
----
 
 With these fixes applied, the main remaining task is to complete the implementation of the **model.py** script. Below is a summary highlighting the work done in this module:
 
@@ -106,6 +108,10 @@ With these fixes applied, the main remaining task is to complete the implementat
 ### Hotfixes
 
 Through the development of the project, some hotfixes were needed to keep the progress of the challenge. Here's a list of the implemented hotfixes related to the scripts of Part I.
+
+<p align="center">
+<img src="https://media1.tenor.com/m/cxLlTok8ni4AAAAd/hotfix-patch.gif" alt="Working" width="300" />
+</p>
 
 #### Hotfix: Adding condition to generate a target vector
 
@@ -180,7 +186,13 @@ self._encoder = OneHotEncoder(sparse_output=False)
 
 [Back to the start](#mle-challenge)
 
-To deploy the model in an `API` using `FastAPI` and pass all the unit tests, it required to generate code for a correct deployment. Here's a list of the key changes made across the provided files:
+To deploy the model in an `API` using `FastAPI` and pass all the unit tests, it required to generate code for a correct deployment. 
+
+<p align="center">
+<img src="https://media1.tenor.com/m/Mfamt2u-Mb0AAAAC/il-paradiso-delle-signore-vittorio-conti.gif" alt="Working" width="300" />
+</p>
+
+Here's a list of the key changes made across the provided files:
 
 - **model.py:**
     - [Hotfix 1](#hotfix-adding-condition-to-generate-a-target-vector), [Hotfix 2](#hotfix-adding-onehotencoder-from-scikit-learn) and [Hotfix 3](#hotfix-disabling-handle_unknown) described on the previous section.
@@ -209,6 +221,10 @@ With the previous scripts fully functional, we are now ready to deploy our API t
 You can access the deployed application here:  
 [Deployed Application](https://mle-challenge-756665630445.southamerica-west1.run.app)
 
+<p align="center">
+<img src="https://media1.tenor.com/m/PulKR2Nm9d4AAAAC/jump-deploying-without-tests.gif" alt="Deployment" width="300" />
+</p>
+
 To enable deployment, we applied the following key changes to the repository:
 
 - **Dockerfile:**  
@@ -232,6 +248,8 @@ To enable deployment, we applied the following key changes to the repository:
 
 ## Part IV
 
+[Back to the start](#mle-challenge)
+
 Well, this part was really hard to get done.
 
 I will begin by describing all the things that gone wrong and could have gone so much better:
@@ -252,13 +270,17 @@ I will begin by describing all the things that gone wrong and could have gone so
     - Push image to a container registry (at first, I wanted to use DockerHub)
     - Use the image to deploy a Cloud Run instance
 
-  The CI part was not so difficult: I just required to reapply the same lines of code I was executing locally on the workflow. But man, the CD. The CD was just OTHER THING.
+  The CI part was not so difficult: I just required to reapply the same lines of code I was executing locally on the workflow. But man, the CD. The CD was just a completely different story.
 
   First, I learned settting a connection from DockerHub to GCP was not straightforward, so I replaced DockerHub to GCP Artifact Registry. That shouldn't be so hard, right? Wrong.
 
   Permissions and roles. I quickly learned I needed to set up some authentication to my workflow in order to push the built image to the repository. So I started reading, watching videos, etc in order to learn all the configurations needed to set this workflow correctly. Man, I learned A LOT. IAM, service account, gcp CLI, etc. I really hope my project passes the evaluation, because I really wouldn't wish this for someone else to have the same experience.
 
-  Another thing that went wrong really bad was the way I was trying to set the steps of both workflows. As I was taught, a good practice is to use Github Actions workflows built by other people (specially the ones built by big companies like Google). So I searched for workflows to deploy Images to GCP and tried to use them. Of course, this went really really wrong. None of the workflows worked. I tried many times to fix the workflows, reading on the web, watching a lot of videos. All to later give up on these workflows and switch to `gcloud CLI`, and then, it all started working like a charm. Just magic. But man, I do not joke saying I spent a full day fixing this particular issue.
+  Another thing that went wrong really bad was the way I was trying to set the steps of both workflows. As I was taught, a good practice is to use Github Actions workflows built by other people (specially the ones built by big companies like Google). So I searched for workflows to deploy Images to GCP and tried to use them. Of course, this went really wrong. None of the workflows worked. I tried many times to fix the workflows, reading on the web, watching a lot of videos. All to later give up on these workflows and switch to `gcloud CLI`, and then, it all started working like a charm. Just magic. But man, I do not joke saying I spent a full day fixing this particular issue.
+
+  <p align="center">
+  <img src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExbmk2NjB1YTBtcHFmd3g3c29icnZuajNoejd3Ym9zbnN0MWhybXRxbyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/E2USislQIlsfm/giphy.gif" alt="God why" width="400" />
+  </p>
 
 Anyways, this is the solution I came up:
 
@@ -382,3 +404,16 @@ jobs:
             --allow-unauthenticated \
             --min-instances 1
 ```
+
+## Closure
+
+[Back to the start](#mle-challenge)
+
+This is it! If you read through the whole solution, thanks for your attention. I really hope this solution meets the desired outcome to approve the challenge. If not, well at least I had fun.
+
+See you next time!!
+
+<p align="center">
+<img src="https://media1.tenor.com/m/Syo75lZhQ4gAAAAC/rambo-thumbs-up-rambo.gif" alt="God why" width="300" />
+</p>
+
