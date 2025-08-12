@@ -1,11 +1,8 @@
 name: 'Continuous Delivery'
 on:
-  workflow_run:
-    workflows: ["Continuous Integration"] 
-    types:
-      - completed
-    branches:
-      - main
+  push:
+      branches:
+          [main]
 
   workflow_dispatch:
 
@@ -14,8 +11,10 @@ permissions:
   contents: read
 
 jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
   deploy:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    needs: ci
     runs-on: ubuntu-latest
     env:
       DOCKER_TAG: ${{ secrets.REGION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/${{ secrets.SERVICE }}/${{ secrets.IMAGE_NAME }}:${{ github.sha }}
